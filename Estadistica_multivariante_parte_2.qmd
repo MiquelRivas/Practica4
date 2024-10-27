@@ -108,6 +108,20 @@ En una investigación sobre la satisfacción de los clientes de una cadena de ti
 El equipo de análisis de datos ha recopilado información de los clientes y busca determinar si el conjunto de datos sigue una distribución normal multivariante, lo cual es un requisito fundamental para aplicar ciertos modelos estadísticos. Para verificar este supuesto, te piden que emplees la distancia de Mahalanobis al cuadrado como medida clave y que realices una prueba de bondad de ajuste con el fin de evaluar si los valores calculados se ajustan a la distribución esperada. Los datos se encuentran en [clientes](https://github.com/igmuib/Talleres_AD_Medicina/blob/main/clientes.csv). 
 
 #### Respuesta
+```{r}
+clientes<-read.csv("clientes.csv")
+clientes
+```
+
+calculamos las medias y las covarianzas
+```{r}
+medias_clientes<-colMeans(clientes)
+covarianzas_clientes<-cov(clientes)
+distancia_clientes<-mahalanobis(clientes, medias_clientes, covarianzas_clientes)
+ks.test(distancia_clientes, "pchisq", df = 3)
+```
+
+Por tanto, la respuesta es si.
 
 
 ### Problema 5
@@ -135,6 +149,10 @@ La variable $T^2$ se utiliza de manera análoga a la ley $t$ de Student, en cont
 Para $p$ y $n$ fijos, genera una muestra de una ley $T^2(p, n)$ de Hotelling. Representa los resultados mediante un histograma. Luego, investiga la función `rHotelling` del paquete `EnvStats` y compara los resultados obtenidos con los de la simulación.
 
 #### Respuesta
+Consideraremos una variable con p=10, n=100
+
+
+
 
 ### Problema 6
 
