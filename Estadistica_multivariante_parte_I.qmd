@@ -26,6 +26,29 @@ Simula un conjunto de datos que tenga 5 variables $X_1, X_2, X_3, X_4, X_5$, con
 
 ### Respuesta
 
+```{r}
+#variables independientes con diferentes medias y varianzas
+X1 <- rnorm(50, mean = 5, sd = 1)
+X2 <- rnorm(50, mean = 10, sd = 2)
+X3 <- rnorm(50, mean = 15, sd = 3)
+X4 <- rnorm(50, mean = 20, sd = 4)
+
+# Definir X5 como combinación lineal de X1 y X2
+X5 <- 2 * X1 + 3 * X2
+
+# Crear un data frame con las variables
+data <- data.frame(X1, X2, X3, X4, X5)
+
+# Verificar el rango de la matriz de datos
+rank <- qr(data)$rank
+print(rank)
+
+
+```
+Como se observa, el rango de la matriz de datos es 4, que es menos al numero de variables. Por tanto, debe haber una variable (X5) que depende del resto.
+
+
+
 
 ## Problema 2
 
@@ -44,6 +67,44 @@ Define una matriz de transformación lineal $T$ de escalamiento (solo tiene valo
 Ahora, transforma la matriz de datos $X$ en una nueva matriz $Y = X T$. Calcula el vector de medias $\mu_Y$ de las variables transformadas y la matriz de covarianzas $\Sigma_Y$. Verifica tus resultados con las funciones `colMeans()` y `cov()` de R.
 
 ### Respuesta
+
+```{r}
+#variables independientes con diferentes medias y varianzas
+X1 <- rnorm(50, mean = 5, sd = 1)
+X2 <- rnorm(50, mean = 10, sd = 2)
+X3 <- rnorm(50, mean = 15, sd = 3)
+X4 <- rnorm(50, mean = 20, sd = 4)
+
+# Crear un data frame con las variables originales
+data_original <- data.frame(X1, X2, X3, X4)
+
+
+# Definir la matriz de transformación de escalamiento
+transformation_matrix <- diag(c(2, 0.5, 1.5, 1))
+
+# Aplicar la matriz de transformación a las variables originales
+data_scaled <- as.data.frame(as.matrix(data_original) %*% transformation_matrix)
+
+# Cambiar nombres de las columnas para reflejar las variables escaladas
+names(data_scaled) <- c("X1_scaled", "X2_scaled", "X3_scaled", "X4_scaled")
+
+# Mostrar las primeras filas de las variables originales y escaladas
+head(data_original)
+head(data_scaled)
+# A mano
+medX1<-sum(data_scaled$X1_scaled)/50
+medX2<-sum(data_scaled$X2_scaled)/50
+medX3<-sum(data_scaled$X3_scaled)/50
+medX4<-sum(data_scaled$X4_scaled)/50
+
+#vector medias
+c(medX1,medX2,medX3,medX4)
+#comprobamos
+colMeans(data_scaled)
+var(data_scaled)
+
+```
+
 
 
 ## Problema 3
@@ -67,6 +128,75 @@ a. ¿Son las distancias de Mahalanobis iguales antes y después de la transforma
 
 b. La distancia de Mahalanobis al cuadrado debería seguir una distribución $\chi^2$ con $p$ grados de libertad, donde $p$ es el número de variables. Verifica si esto se cumple en tu caso. Justifica tu respuesta en función del test estadístico apropiado y un gráfico.
 
-### Respuesta al apartado a
+###Respuestas previas
+```{r}
+library(MASS)
+```
+```{r}
+mu <- c(5, 10, 15)
+Sigma <- matrix(c(2, 1, 1,
+                  1, 3, 1,
+                  1, 1, 4), nrow = 3, byrow = TRUE)
 
+# Generar los datos simulados
+multivar <- mvrnorm(n = 100, mu = mu, Sigma = Sigma)
+
+# Convertir a data frame y asignar nombres a las columnas
+multivar <- as.data.frame(data_multivar)
+colnames(multivar) <- c("X1", "X2", "X3")
+
+# Mostrar las primeras filas de los datos simulados
+head(multivar)
+```
+Para la distancia requerida necesitamos las medias y las varianzas de los datos
+```{r}
+center<-colMeans(multivar)
+cova<-cov(multivar)
+```
+Calculamos la distancia
+```{r}
+distancia<-mahalanobis(multivar, center, cova)
+```
+Definimos la matriz
+```{r}
+trans <- matrix(c(1.5, 0.3, 0,
+                  0.2, 1.1, 0,
+                  0, 0, 1.5), nrow = 3, byrow = TRUE)
+
+multivar_trans<-as.data.frame(as.matrix(multivar) %*% trans)
+head(multivar_trans)
+```
+### Respuesta al apartado a
+```{r}
+center_trans<-colMeans(multivar_trans)
+cova_trans<-cov(multivar_trans)
+```
+Calculamos la distancia
+```{r}
+distancia_trans<-mahalanobis(multivar_trans, center_trans, cova_trans)
+```
+```{r}
+distancia-distancia_trans
+```
+
+Así, aunque no se muestre que sea todo ceros, concluimos que son iguales (no indica cero por el error de la máquina).
+
+Notemos que tiene sentido, ya que hemos aplicado una transformación lineal. Entonces, el vector de medias y el de covarianzas seran proporcionales en T al orinial y por tanto, al hacer la distancia, esta proporcionalidad se ve eliminada.
 ### Respuesta al apartado b
+Notemos que p=3.
+La formula de R, omite la raiz cuadrada y por tanto, la distancia ya esta al cuadrado. Creamos el test. 
+Hipotesis nula: Sigue una distribuciónn Khi cuadrado.
+Hupotesis alternativa: No sigue una distribuciónn Khi cuadrado
+```{r}
+ks.test(distancia, "pchisq", df = 3)
+```
+Aceptamos claramente la hipotesis nula.
+Hacemos un gráfico para comprobar.
+```{r}
+hist(distancia, breaks = 10, probability = TRUE,
+     main = "Histograma de Mahalanobis^2 y Chi-cuadrado(3)",
+     xlab = "Distancia de Mahalanobis^2")
+
+curve(dchisq(x, df = 3), add = TRUE, col = "blue", lwd = 2)
+```
+
