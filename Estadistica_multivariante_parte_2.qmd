@@ -35,6 +35,14 @@ $$
 
 #### Respuesta
 
+```{r}
+mu<-c(-1,1,0)
+covarianzas<-matrix(c(1, 0, 1,
+                  0, 3, 1,
+                  1,2, 2), nrow = 3, byrow = TRUE)
+```
+Y es normal, con media 1 y desviación, 4. 
+
 
 
 (b) El analista desea encontrar una estrategia que elimine  la correlación entre el precio de la acción $X_1$ y una combinación lineal de la tasa de interés $X_2$ y el precio de la materia prima $X_3$. Encuentra un vector $a_{(2\times 1)}$, tal que las variables $X_1$ y $X_1 - a^t \begin{pmatrix} X_2 \\ X_3 \end{pmatrix}$ sean independientes.
@@ -64,10 +72,29 @@ $$
 $$
 
 de una población $\mathcal{N}_3(\mu, \Sigma)$ con $\mu$ y $\Sigma$ desconocidos.
+```{r}
+library(MASS)
+```
+
+```{r}
+datos<-matrix(c(2, 6, -3,
+                  -4, 8, 7,
+                  -2,9, 7,
+                -7,8,2), nrow = 4, byrow = TRUE)
+datos
+```
 
 (a) Calcula el estimador de máxima verosimilitud de $\mu$
+```{r}
+colMeans(datos)
+```
+
 
 (b) Calcula un estimador insesgado de $\Sigma$
+Es la cuasivarianza
+```{r}
+cov(datos)
+```
 
 
 ### Problema 3
