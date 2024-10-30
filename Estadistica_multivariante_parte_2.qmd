@@ -148,9 +148,51 @@ La variable $T^2$ se utiliza de manera análoga a la ley $t$ de Student, en cont
 
 Para $p$ y $n$ fijos, genera una muestra de una ley $T^2(p, n)$ de Hotelling. Representa los resultados mediante un histograma. Luego, investiga la función `rHotelling` del paquete `EnvStats` y compara los resultados obtenidos con los de la simulación.
 
-#### Respuesta
-Consideraremos una variable con p=10, n=100
+#### Respuestaç
+```{r}
+library(EnvStats)
+```
 
+```{r}
+# Cargar librerías necesarias
+library(MASS)     # Para generar datos multivariantes normales
+library(EnvStats) # Para usar la función rHotelling
+
+# Parámetros
+p <- 3            # Dimensión (puedes cambiar este valor)
+n <- 10           # Número de observaciones (puedes cambiar este valor)
+num_simulations <- 1000 # Número de simulaciones
+
+# Función para simular T^2 de Hotelling
+simulate_hotelling <- function(p, n) {
+  # Generar vector Z ~ N_p(0, I)
+  Z <- mvrnorm(1, mu = rep(0, p), Sigma = diag(p))
+  
+  # Generar matriz Q ~ W_p(I, n)
+  X <- mvrnorm(n, mu = rep(0, p), Sigma = diag(p))
+  Q <- t(X) %*% X  # Matriz de covarianza acumulada
+  
+  # Calcular T^2
+  T2 <- n * t(Z) %*% solve(Q) %*% Z
+  return(as.numeric(T2))
+}
+
+# Realizar simulación de T^2
+T2_values <- replicate(num_simulations, simulate_hotelling(p, n))
+
+# Generar histograma de los resultados simulados
+hist(T2_values, breaks = 30, main = expression(paste("Simulación de ", T^2)),
+     xlab = expression(T^2), col = "lightblue")
+
+# Comparar con la función rHotelling de EnvStats
+T2_envstats <- rHotelling(num_simulations, p = p, df = n)
+
+# Superponer histograma de EnvStats para comparar
+hist(T2_envstats, breaks = 30, add = TRUE, col = rgb(1, 0, 0, 0.5))
+legend("topright", legend = c("Simulación propia", "rHotelling"),
+       fill = c("lightblue", rgb(1, 0, 0, 0.5)))
+
+```
 
 
 
@@ -173,3 +215,57 @@ $$
 Genera una muestra de una ley $\Lambda$ de Wilks. Representa los resultados mediante un histograma. Luego, investiga la función `rWilksLambda` del paquete `EnvStats` y compara los resultados obtenidos con los de la simulación.
 
 #### Respuesta
+
+```{r}
+# Cargar librerías necesarias
+library(MASS)       # Para generar datos multivariantes normales
+library(EnvStats)   # Para rWilksLambda si está disponible
+
+# Parámetros
+p <- 3              # Número de variables (dimensión)
+n <- 10             # Número de observaciones
+num_simulations <- 1000  # Número de simulaciones
+
+# Función para simular Wilks' Lambda
+simulate_wilks_lambda <- function(p, n) {
+  # Generar una matriz X de tamaño (n x p) de datos normales multivariantes
+  X <- mvrnorm(n, mu = rep(0, p), Sigma = diag(p))
+  
+  # Calcular la matriz de covarianza total (sin restricciones)
+  S_total <- t(X) %*% X
+
+  # Dividir las observaciones en dos grupos (simulación de un modelo restringido)
+  X1 <- X[1:(n/2), ]
+  X2 <- X[(n/2 + 1):n, ]
+
+  # Calcular la matriz de covarianza dentro de los grupos
+  S_within <- (t(X1) %*% X1) + (t(X2) %*% X2)
+
+  # Calcular Wilks' Lambda
+  lambda <- det(S_within) / det(S_total)
+  return(lambda)
+}
+
+# Realizar simulación de Wilks' Lambda
+lambda_values <- replicate(num_simulations, simulate_wilks_lambda(p, n))
+
+# Generar histograma de los resultados simulados
+hist(lambda_values, breaks = 30, main = expression(paste("Simulación de Wilks' ", Lambda)),
+     xlab = expression(Lambda), col = "lightblue")
+
+# Comparación con la función rWilksLambda de EnvStats, si está disponible
+if ("rWilksLambda" %in% ls("package:EnvStats")) {
+  lambda_envstats <- rWilksLambda(num_simulations, p = p, df = n)
+  
+  # Superponer histograma de rWilksLambda para comparar
+  hist(lambda_envstats, breaks = 30, add = TRUE, col = rgb(1, 0, 0, 0.5))
+  
+  # Leyenda para diferenciar
+  legend("topright", legend = c("Simulación propia", "rWilksLambda"),
+         fill = c("lightblue", rgb(1, 0, 0, 0.5)))
+} else {
+  message("La función rWilksLambda no está disponible en EnvStats.")
+}
+
+```
+
